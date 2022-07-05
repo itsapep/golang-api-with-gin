@@ -1,10 +1,8 @@
 package delivery
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/gin-gonic/gin"
+	"github.com/itsapep/golang-api-with-gin/config"
 	"github.com/itsapep/golang-api-with-gin/delivery/controller"
 	"github.com/itsapep/golang-api-with-gin/repository"
 	"github.com/itsapep/golang-api-with-gin/usecase"
@@ -22,9 +20,8 @@ func Server() *appServer {
 	productRepo := repository.NewProductRepository()
 	crProdUc := usecase.NewCreateProductUsecase(productRepo)
 	liProdUc := usecase.NewListProductsUsecase(productRepo)
-	apiHost := os.Getenv("API_HOST")
-	apiPort := os.Getenv("API_PORT")
-	host := fmt.Sprintf("%s:%s", apiHost, apiPort)
+	c := config.NewConfig()
+	host := c.URL
 	return &appServer{
 		crProdUc: crProdUc,
 		liProdUc: liProdUc,
