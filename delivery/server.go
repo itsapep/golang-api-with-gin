@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/itsapep/golang-api-with-gin/delivery/controller"
@@ -10,36 +11,37 @@ import (
 )
 
 type appServer struct {
-	productUsecase  usecase.ProductUsecase
-	categoryUsecase usecase.CategoryUsecase
-	engine          *gin.Engine
-	host            string
-}
-
-func (p *appServer) initHandlers() {
-	controller.NewProductController(p.engine, p.productUsecase)
-	controller.NewCategoryController(p.engine, p.categoryUsecase)
-}
-
-func (p *appServer) Run() {
-	p.initHandlers()
-	err := p.engine.Run(p.host)
-	if err != nil {
-		panic(err)
-	}
+	crProdUc usecase.CreateProductUsecase
+	liProdUc usecase.ListProductsUsecase
+	engine   *gin.Engine
+	host     string
 }
 
 func Server() *appServer {
 	r := gin.Default()
-	prodRepo := repository.NewProductRepository()
-	catRepo := repository.NewCategoryRepository()
-	prodUsecase := usecase.NewProductUsecase(prodRepo)
-	catUsecase := usecase.NewCategoryUsecase(catRepo)
-	host := fmt.Sprintf("%s:%s", "localhost", "8888")
+	productRepo := repository.NewProductRepository()
+	crProdUc := usecase.NewCreateProductUsecase(productRepo)
+	liProdUc := usecase.NewListProductsUsecase(productRepo)
+	apiHost := os.Getenv("API_HOST")
+	apiPort := os.Getenv("API_PORT")
+	host := fmt.Sprintf("%s:%s", apiHost, apiPort)
 	return &appServer{
-		productUsecase:  prodUsecase,
-		categoryUsecase: catUsecase,
-		engine:          r,
-		host:            host,
+		crProdUc: crProdUc,
+		liProdUc: liProdUc,
+		engine:   r,
+		host:     host,
+	}
+}
+
+// accomodate all controler
+func (a *appServer) initHandlers() {
+	controller.NewProductController(a.engine, a.crProdUc, a.liProdUc)
+}
+
+func (a *appServer) Run() {
+	a.initHandlers()
+	err := a.engine.Run(a.host)
+	if err != nil {
+		panic(err)
 	}
 }

@@ -9,38 +9,57 @@ import (
 )
 
 type ProductController struct {
-	router  *gin.Engine
-	usecase usecase.ProductUsecase
+	crProdUc usecase.CreateProductUsecase
+	liProdUc usecase.ListProductsUsecase
+	router   *gin.Engine
 }
 
-func (cc *ProductController) registerNewProduct(ctx *gin.Context) {
-	productId := ctx.PostForm("productId")
-	productName := ctx.PostForm("productName")
-	newProduct := model.Product{
-		ProductId:   productId,
-		ProductName: productName,
-		Category:    model.Category{},
-		IsActive:    false,
+func (p *ProductController) createNewProduct(c *gin.Context) {
+	var newProduct *model.Product
+	if err := c.BindJSON(&newProduct); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	} else {
+		err := p.crProdUc.CreateProduct(newProduct)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"status":  "FAILED",
+				"message": "Error when creating Product",
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "OK",
+			"message": newProduct,
+		})
 	}
-	err := cc.usecase.Register(&newProduct)
+}
+
+func (p *ProductController) listProducts(c *gin.Context) {
+	products, err := p.liProdUc.ListProducts()
 	if err != nil {
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"status":  "FAILED",
-			"message": "Error when creating product",
+			"message": "Error when retrieve Product",
 		})
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":  "SUCCESS",
-		"message": newProduct,
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "OK",
+		"message": products,
 	})
+
 }
 
-func NewProductController(r *gin.Engine, usecase usecase.ProductUsecase) *ProductController {
+func NewProductController(router *gin.Engine, crProdUc usecase.CreateProductUsecase, liProdUc usecase.ListProductsUsecase) *ProductController {
+	// here lies all request method we need
 	controller := ProductController{
-		router:  r,
-		usecase: usecase,
+		crProdUc: crProdUc,
+		liProdUc: liProdUc,
+		router:   router,
 	}
-	r.POST("/product", controller.registerNewProduct)
+	router.POST("/product", controller.createNewProduct)
+
+	router.GET("/product", controller.listProducts)
+
 	return &controller
 }
