@@ -10,17 +10,16 @@ type RepositoryManager interface {
 }
 
 type repositoryManager struct {
-	productDb repository.ProductRepository
+	infra Infra
 }
 
 // ProductRepo implements RepositoryManager
 func (r *repositoryManager) ProductRepo() repository.ProductRepository {
-	return r.productDb
+	return repository.NewProductRepository(r.infra.SqlDb())
 }
 
-func NewRepositoryManager() RepositoryManager {
-	productDb := repository.NewProductRepository()
+func NewRepositoryManager(infra Infra) RepositoryManager {
 	return &repositoryManager{
-		productDb: productDb,
+		infra: infra,
 	}
 }
