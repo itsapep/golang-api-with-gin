@@ -10,6 +10,7 @@ type APIConfig struct {
 }
 type DBConfig struct {
 	DataSourceName string
+	Env            string
 }
 
 type Config struct {
@@ -20,6 +21,8 @@ type Config struct {
 func (c *Config) readConfig() {
 	api := os.Getenv("API_URL")
 
+	env := os.Getenv("ENV")
+
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
@@ -27,7 +30,10 @@ func (c *Config) readConfig() {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", dbHost, dbUser, dbPassword, dbName, dbPort)
 
-	c.DBConfig = DBConfig{DataSourceName: dsn}
+	c.DBConfig = DBConfig{
+		DataSourceName: dsn,
+		Env:            env,
+	}
 	c.APIConfig = APIConfig{
 		URL: api,
 	}

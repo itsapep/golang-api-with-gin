@@ -1,52 +1,42 @@
 package controller
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"github.com/itsapep/golang-api-with-gin/delivery/api"
 	"github.com/itsapep/golang-api-with-gin/model"
 	"github.com/itsapep/golang-api-with-gin/usecase"
+	"github.com/itsapep/golang-api-with-gin/utils"
 )
 
 type ProductController struct {
 	crProdUc usecase.CreateProductUsecase
 	liProdUc usecase.ListProductsUsecase
 	router   *gin.Engine
+	api.BaseAPI
 }
 
 func (p *ProductController) createNewProduct(c *gin.Context) {
-	var newProduct *model.Product
-	if err := c.BindJSON(&newProduct); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-	} else {
-		err := p.crProdUc.CreateProduct(newProduct)
-		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"status":  "FAILED",
-				"message": "Error when creating Product",
-			})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "OK",
-			"message": newProduct,
-		})
+	var newProduct model.Product
+	err := p.ParseRequestBody(c, &newProduct)
+	if err != nil {
+		p.Failed(c, utils.RequiredError())
+		return
 	}
+	err = p.crProdUc.CreateProduct(&newProduct)
+	if err != nil {
+		p.Failed(c, err)
+		return
+	}
+	p.Success(c, newProduct)
 }
 
 func (p *ProductController) listProducts(c *gin.Context) {
 	products, err := p.liProdUc.ListProducts()
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"status":  "FAILED",
-			"message": "Error when retrieve Product",
-		})
+		p.Failed(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "OK",
-		"message": products,
-	})
+	p.Success(c, products)
 
 }
 

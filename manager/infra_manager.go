@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/itsapep/golang-api-with-gin/config"
-	"github.com/itsapep/golang-api-with-gin/model"
+	"github.com/itsapep/golang-api-with-gin/migration"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -24,7 +24,7 @@ func (i *infra) SqlDb() *gorm.DB {
 }
 
 func NewInfra(config *config.Config) Infra {
-	resource, err := initDbResource(config.DataSourceName)
+	resource, err := initDbResource(config.DataSourceName, config.Env)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -33,9 +33,11 @@ func NewInfra(config *config.Config) Infra {
 	}
 }
 
-func initDbResource(dataSourceName string) (*gorm.DB, error) {
+func initDbResource(dataSourceName string, env string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(dataSourceName), &gorm.Config{})
-	db.AutoMigrate(&model.Product{})
+	if env == "migration" {
+		migration.DbMigration(db)
+	}
 	if err != nil {
 		return nil, err
 	}
