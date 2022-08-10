@@ -13,9 +13,14 @@ type DBConfig struct {
 	Env            string
 }
 
+type FilePathConfig struct {
+	FilePath string
+}
+
 type Config struct {
 	APIConfig
 	DBConfig
+	FilePathConfig
 }
 
 func (c *Config) readConfig() {
@@ -37,10 +42,14 @@ func (c *Config) readConfig() {
 	c.APIConfig = APIConfig{
 		URL: api,
 	}
+	c.FilePathConfig = FilePathConfig{
+		FilePath: os.Getenv("FILE_PATH"),
+	}
 }
 
 func NewConfig() Config {
 	cfg := Config{}
 	cfg.readConfig()
+	fmt.Println("filepath:", cfg.FilePath)
 	return cfg
 }

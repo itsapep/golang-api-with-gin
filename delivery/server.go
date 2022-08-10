@@ -19,8 +19,7 @@ func Server() *appServer {
 	infra := manager.NewInfra(&appConfig)
 	repoManager := manager.NewRepositoryManager(infra)
 	usecaseManager := manager.NewUsecaseManager(repoManager)
-	c := config.NewConfig()
-	host := c.URL
+	host := appConfig.URL
 	return &appServer{
 		usecaseManager: usecaseManager,
 		engine:         r,
@@ -30,7 +29,7 @@ func Server() *appServer {
 
 // accomodate all controler
 func (a *appServer) initHandlers() {
-	controller.NewProductController(a.engine, a.usecaseManager.ProductRegistrationUsecase(), a.usecaseManager.ListProductUsecase())
+	controller.NewProductController(a.engine, a.usecaseManager.ProductRegistrationUsecase(), a.usecaseManager.ListProductUsecase(), a.usecaseManager.FindProductsUsecase())
 }
 
 func (a *appServer) Run() {
